@@ -1,0 +1,144 @@
+/* Shared styles for every page of the site */
+
+html, body {
+  margin: 0;
+  height: 100%;
+}
+html {
+  /* Always white, even when the browser or computer is in dark mode */
+  color-scheme: light;
+  background: #fff;
+}
+body {
+  /* Stack the menu bar on top, and let the main area fill the rest */
+  display: flex;
+  flex-direction: column;
+  font-family: 'Press Start 2P', monospace;
+  color: #480c69;
+}
+
+/* Horizontal menu bar */
+nav ul {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 48px;
+  list-style: none;
+  margin: 0;
+  padding: 24px 16px;
+}
+nav a {
+  color: inherit;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+nav a:hover,
+nav a[aria-current="page"] {
+  text-decoration: underline;
+}
+
+/* Home icon: lines up with the text links and grows a little on hover */
+nav a.home {
+  display: flex;
+}
+nav a.home svg {
+  transition: transform 0.15s;
+}
+nav a.home:hover svg {
+  transform: scale(1.2);
+}
+
+/* Center the heading in the space below the menu */
+main {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+h1 {
+  font-size: clamp(1.5rem, 6vw, 4rem);
+  text-align: center;
+  margin: 0 16px;
+}
+
+/* Trial settings bar stacked above the game */
+.game-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+.trial-settings {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px 32px;
+}
+.trial-settings label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.75rem;
+}
+.trial-settings select {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 3px solid #480c69;
+  padding: 6px 8px;
+  cursor: pointer;
+}
+
+/* Pop-up with the trial outcome */
+.result-popup {
+  font-family: inherit;
+  color: inherit;
+  background: #fff;
+  border: 4px solid #480c69;
+  padding: 32px;
+  width: min(480px, calc(100vw - 32px));
+  text-align: center;
+  line-height: 1.8;
+}
+.result-popup::backdrop {
+  background: rgba(72, 12, 105, 0.4);
+}
+.result-popup h2 {
+  font-size: 1.5rem;
+  margin: 0 0 24px;
+}
+.result-popup p {
+  font-size: 0.7rem;
+  margin: 0 0 12px;
+}
+.result-popup form {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 28px;
+}
+.result-popup button {
+  font: inherit;
+  font-size: 0.7rem;
+  color: #480c69;
+  background: none;
+  border: 3px solid #480c69;
+  padding: 10px 14px;
+  cursor: pointer;
+}
+.result-popup button.primary {
+  color: #fff;
+  background: #480c69;
+}
+
+/* Box that holds a game, in the middle of the page.
+   Starts square; a script then fits its height to the game. */
+.game-frame {
+  display: block;
+  width: min(640px, calc(100vw - 32px));
+  aspect-ratio: 1;
+  border: 4px solid #480c69;
+  margin-bottom: 24px;
+}

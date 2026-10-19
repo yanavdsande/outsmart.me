@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Find 4 game</title>
+<style>
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 20px 0;
+  background: #f0f0f0;
+}
+
+#instructions, #feedback {
+  text-align: center;
+  margin: 40px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(5, 100px);
+  grid-auto-rows: repeat(5, 100px);
+  grid-gap: 10px;
+  justify-content: center;
+}
+
+.card {
+  margin: 5px;
+  background-color: #6589f9;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center center;
+  height: 100px;
+  width: 100px;
+  cursor: pointer;
+}
+
+.selected {
+  border: 4px solid blue;
+}
+		#NextButton {
+    position: fixed !important;
+    bottom: 20px;
+    right: 20px;
+    z-index: 9999 !important;
+    display: none; /* still starts hidden */
+  }
+
+	@media (max-width: 600px) {
+  .grid {
+    grid-template-columns: repeat(5, 1fr);
+    grid-gap: 3vw;
+    padding: 0 1vw;
+  }
+
+  .card {
+    margin: 0; /* otherwise 100% width + margin overflows the column */
+    width: 100%;
+    height: 0;
+    padding-bottom: 100%; /* Makes it a square */
+  }
+}
+</style>
+</head>
+<body>
+
+<div id="instructions"> Find 4 game </div>
+<div id="game"></div>
+<div id="feedback"></div>
+
+<script>
+// Stand-in for Qualtrics, so the game also runs outside a Qualtrics survey.
+// Inside Qualtrics the real Qualtrics object already exists and this is skipped.
+if (typeof window.Qualtrics === 'undefined') {
+  window.Qualtrics = {
+    SurveyEngine: {
+      embeddedData: {},
+      addOnload(fn) {
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
+        else fn();
+      },
+      // Keeps the values here instead of saving them to a survey
+      setEmbeddedData(key, value) {
+        this.embeddedData[key] = value;
+        console.log('[embedded data]', key, '=', value);
+      },
+      clickNextButton() {
+        console.log('[next button]', this.embeddedData);
+      }
+    }
+  };
+}
+</script>
+
+<script>
+Qualtrics.SurveyEngine.addOnload(function() {
+    let startTime = Date.now(); // Start timer
+
+	const hideNextBtn = () => {
+  const btn = document.getElementById("NextButton");
+  if (btn) {
+    btn.style.display = "none";
+  } else {
+    setTimeout(hideNextBtn, 50); // Try again in 50ms
+  }
+};
+hideNextBtn();
+
+    let cardsArray = [
+				{ name: 'car-yellow-2', img:'https://psychru.eu.qualtrics.com/ControlPanel/Graphic.php?IM=IM_N9wUP6Dn02dDhvk' },
+		{ name: 'car-red-2', img:'images/car-red-2.jpg' },
+		{ name: 'bike-blue-1', img:'images/bike-blue-1.jpg' },
+		{ name: 'couch-blue-1', img:'https://psychru.eu.qualtrics.com/ControlPanel/Graphic.php?IM=IM_Hmh6C9h9qsjWEXG' },
+		{ name: 'pen-green-1', img:'https://psychru.eu.qualtrics.com/ControlPanel/Graphic.php?IM=IM_OFUPlk7WhYFgRtT' },
+		{ name: 'car-green-1', img:'images/car-green-1.jpg' },
+		{ name: 'apple-red-1', img:'images/apple-red-1.jpg' },
+		{ name: 'bike-orange-1', img:'images/bike-orange-1.jpg' },
+		{ name: 'pen-red-1', img:'https://psychru.eu.qualtrics.com/ControlPanel/Graphic.php?IM=IM_sDs2ry0d1mJGhHL' },
+		{ name: 'pen-blue-1', img:'images/pen-blue-1.jpg' },
+		{ name: 'paprika-orange-1', img:'images/paprika-orange-1.jpg' },
+		{ name: 'car-red-1', img:'images/car-red-1.jpg' },
+		{ name: 'couch-green-1', img: 'https://psychru.eu.qualtrics.com/ControlPanel/Graphic.php?IM=IM_1UIpAOU3gty2Huk' },
+		{ name: 'paprika-green-1', img:'images/paprika-green-1.jpg' },
+        { name: 'glasses-yellow-2', img: 'images/glasses-yellow-2.jpg' },
+		{ name: 'apple-green-1', img: 'images/apple-green-1.jpg' },
+		{ name: 'couch-yellow-1', img: 'images/couch-yellow-1.jpg' },
+		{ name: 'glasses-yellow-1', img: 'images/glasses-yellow-1.jpg' },
+        { name: 'couch-pink-1', img: 'images/couch-pink-1.jpg' },
+		{ name: 'glasses-pink-1', img: 'images/glasses-pink-1.jpg' },
+		{ name: 'glasses-red-2', img: 'images/glasses-red-2.jpg' },
+		{ name: 'cap-yellow-1', img: 'images/cap-yellow-1.jpg' },
+		{ name: 'cap-blue-1', img: 'images/cap-blue-1.jpg' },
+		{ name: 'bike-red-1', img: 'images/bike-red-1.jpg' },
+		{ name: 'cap-orange-1', img: 'images/cap-orange-1.jpg' }
+    ];
+
+    const game = document.getElementById('game');
+    const grid = document.createElement('section');
+    grid.setAttribute('class', 'grid');
+    game.appendChild(grid);
+
+    cardsArray.forEach(item => {
+        const card = document.createElement('div');
+        card.classList.add('card');
+        card.dataset.name = item.name;
+		card.style.backgroundImage = "url('" + item.img + "')";
+        grid.appendChild(card);
+    });
+
+    let maxCards = 4, selectedCards = 0;
+	let clickCount = 0;
+    grid.addEventListener('click', function(event) {
+        let clicked = event.target;
+        if (clicked.nodeName === 'SECTION') return;
+		clickCount++;
+        if (clicked.classList.contains('selected')) {
+            clicked.classList.remove('selected');
+            selectedCards--;
+        } else if (selectedCards < maxCards) {
+            clicked.classList.add('selected');
+            selectedCards++;
+        }
+
+        if (selectedCards === 4) {
+            let proposedSolution = [];
+            document.querySelectorAll('.selected').forEach(card => proposedSolution.push(card.dataset.name));
+
+            if (proposedSolution.includes('couch-blue-1') &&
+                proposedSolution.includes('couch-green-1') &&
+                proposedSolution.includes('couch-pink-1') &&
+                proposedSolution.includes('couch-yellow-1')) {
+
+                document.getElementById("feedback").innerHTML = "Correct!";
+const showNextBtn = () => {
+  const btn = document.getElementById("NextButton");
+  if (btn) {
+    btn.style.display = "block";
+  } else {
+    setTimeout(showNextBtn, 50);
+  }
+};
+showNextBtn();
+            } else {
+                document.getElementById("feedback").innerHTML = "Try again!";
+const showNextBtn = () => {
+  const btn = document.getElementById("NextButton");
+  if (btn) {
+    btn.style.display = "none";
+  } else {
+    setTimeout(showNextBtn, 50);
+  }
+};
+showNextBtn();
+            }
+
+            let endTime = Date.now();
+            let timeTaken = (endTime - startTime) / 1000; // Time in seconds
+
+let minutes = Math.floor(timeTaken / 60);
+let seconds = Math.round((timeTaken % 60) * 100) / 100;
+
+// calculate 23%
+let percent23 = timeTaken * 0.23;
+percent23 = Math.round(percent23 * 100) / 100;
+
+			Qualtrics.SurveyEngine.setEmbeddedData("23percent", percent23);
+
+// Create a nicely formatted string
+// Build pluralized units manually
+let minuteLabel = minutes === 1 ? 'minute' : 'minutes';
+let secondLabel = seconds === 1 ? 'second' : 'seconds';
+
+// Build string
+let formattedTime = minutes + ' ' + minuteLabel + ' and ' + seconds + ' ' + secondLabel;
+
+// Log it to the console for debugging
+console.log(formattedTime);  // Check if the output is correct
+
+// Set the embedded data field
+Qualtrics.SurveyEngine.setEmbeddedData("FormattedExperimentTime", formattedTime);
+
+            // Save time taken in Qualtrics Embedded Data
+            Qualtrics.SurveyEngine.setEmbeddedData("TimeTaken", timeTaken);
+
+
+			//win condition
+let opponentOffsetWin = Math.floor(Math.random() * 11); // 0 to 10
+console.log("oppwinseconden")
+console.log(opponentOffsetWin)
+let opponentTimeWin = Math.max(0, timeTaken + opponentOffsetWin); // prevent negative
+console.log(opponentTimeWin)
+let oppMinutesWin = Math.floor(opponentTimeWin / 60);
+let oppSecondsWin = (opponentTimeWin % 60).toFixed(3);
+
+let minuteLabelWin = oppMinutesWin === 1 ? 'minute' : 'minutes';
+let secondLabelWin = oppSecondsWin === 1 ? 'second' : 'seconds';
+
+console.log(oppMinutesWin)
+console.log(minuteLabelWin)
+console.log(oppSecondsWin)
+console.log(secondLabelWin)
+let oppFormattedWin =	oppMinutesWin + ' ' + minuteLabelWin + ' and ' + oppSecondsWin + ' ' + secondLabelWin;
+
+Qualtrics.SurveyEngine.setEmbeddedData("FormattedExperimentTimeWin", oppFormattedWin);
+
+// loose condition
+
+	let opponentOffsetLoose = Math.floor(Math.random() * 11); // 0 to 10
+let opponentTimeLoose = Math.max(0, timeTaken - opponentOffsetLoose); // prevent negative
+
+let oppMinutesLoose = Math.floor(opponentTimeLoose / 60);
+let oppSecondsLoose = (opponentTimeLoose % 60).toFixed(3);
+
+let minuteLabelLoose = oppMinutesLoose === 1 ? 'minute' : 'minutes';
+let secondLabelLoose = oppSecondsLoose === 1 ? 'second' : 'seconds';
+
+let oppFormattedLoose;
+if (opponentTimeLoose === 0) {
+  oppFormattedLoose = "The AI solved the puzzle in less than a second!";
+} else {
+  oppFormattedLoose = 'The AI solved the puzzle in ' + oppMinutesLoose + ' ' + minuteLabelLoose + ' and ' + oppSecondsLoose + ' ' + secondLabelLoose;
+}
+Qualtrics.SurveyEngine.setEmbeddedData("FormattedExperimentTimeLoose", oppFormattedLoose);
+
+	//Initialise embedded data
+	Qualtrics.SurveyEngine.setEmbeddedData("OffsetLoose", opponentOffsetLoose);
+Qualtrics.SurveyEngine.setEmbeddedData("OffsetWin", opponentOffsetWin);
+Qualtrics.SurveyEngine.setEmbeddedData("ClickCount", clickCount);
+
+	// Website only: tell the page around the game how the trial ended, so it can
+	// show the outcome for the chosen condition in a pop-up.
+	// In Qualtrics there is no ?condition= in the address, so this does nothing there.
+	const condition = new URLSearchParams(location.search).get("condition");
+	if (condition) {
+	    Qualtrics.SurveyEngine.setEmbeddedData("Condition", condition);
+	    if (document.getElementById("feedback").innerHTML === "Correct!" && window.parent !== window) {
+	        const won = condition === "win";
+	        let aiText = won ? "The AI needed " + oppFormattedWin : oppFormattedLoose;
+	        if (!/[.!?]$/.test(aiText)) aiText += "."; // "less than a second!" already ends in one
+	        window.parent.postMessage({
+	            type: "trial-result",
+	            won: won,
+	            lines: ["Your time: " + formattedTime, aiText]
+	        }, location.origin);
+	    }
+	}
+
+	//create submit button (only if the page has one; this page doesn't)
+            const submitBtn = document.getElementById("submitBtn");
+            if (submitBtn) {
+            submitBtn.style.display = "block";	submitBtn.addEventListener("click", function() {
+        Qualtrics.SurveyEngine.setEmbeddedData("GameResult", document.getElementById("feedback").innerHTML);
+        Qualtrics.SurveyEngine.clickNextButton();
+    });
+            }
+        }
+    });
+
+
+});
+</script>
+</body>
+</html>

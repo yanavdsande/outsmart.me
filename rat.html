@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Remote Associates Test</title>
+<style>
+  /* Remote Associates Test, presented as in Bowden & Beeman (2003):
+     fixation cross, then the three words above, at and below the center.
+     24-point Times, black on white. */
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+  html {
+    color-scheme: light;
+  }
+  body {
+    margin: 0;
+    background: #fff;
+    color: #000;
+    font: 24pt "Times New Roman", Times, serif;
+  }
+  [hidden] {
+    display: none !important;
+  }
+  button, input {
+    font: inherit;
+    color: inherit;
+  }
+
+  .screen {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    text-align: center;
+  }
+  .screen p {
+    margin: 0 0 0.75em;
+    max-width: 22em;
+  }
+  .example {
+    font-style: italic;
+  }
+  .screen button {
+    margin-top: 0.5em;
+    padding: 0.2em 1em;
+    background: #fff;
+    border: 2px solid #000;
+    cursor: pointer;
+  }
+
+  /* Total time left, plus a bar that shrinks over the 15 seconds of a problem */
+  .clock {
+    position: absolute;
+    top: 16px;
+    left: 0;
+    right: 0;
+  }
+  .problem-bar {
+    width: min(240px, 60%);
+    height: 4px;
+    margin: 8px auto 0;
+  }
+  .problem-bar div {
+    height: 100%;
+    background: #000;
+  }
+
+  /* The fixation cross and the middle word sit exactly at the center */
+  .center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    line-height: 1.6;
+  }
+
+  .answer-form {
+    position: absolute;
+    bottom: 10%;
+    left: 0;
+    right: 0;
+  }
+  .answer-form input {
+    width: min(320px, 80%);
+    text-align: center;
+    border: none;
+    border-bottom: 2px solid #000;
+    background: none;
+    outline: none;
+  }
+  .message {
+    min-height: 1.6em;
+    margin: 8px 0 0;
+  }
+</style>
+</head>
+<body>
+
+<section id="start" class="screen">
+  <p>In each problem you will see three words. Find a fourth word that goes with all three, for example:</p>
+  <p class="example">pine / crab / sauce &rarr; apple</p>
+  <p>Type your answer and press Enter. You have 15 seconds per problem and 5 minutes in total. Solve as many as you can.</p>
+  <button id="start-button">Start</button>
+</section>
+
+<section id="trial" class="screen" hidden>
+  <div class="clock">
+    <div id="time-left">5:00</div>
+    <div class="problem-bar"><div id="problem-bar"></div></div>
+  </div>
+  <div id="fixation" class="center">+</div>
+  <div id="words" class="center" hidden>
+    <div id="word1"></div>
+    <div id="word2"></div>
+    <div id="word3"></div>
+  </div>
+  <form id="answer-form" class="answer-form" autocomplete="off" hidden>
+    <input id="answer" aria-label="Your answer" autocapitalize="off" spellcheck="false">
+    <p id="message" class="message"></p>
+  </form>
+</section>
+
+<section id="end" class="screen" hidden>
+  <p id="end-title"></p>
+  <p id="end-score"></p>
+</section>
+
+<script>
+const TOTAL_MS = 5 * 60 * 1000;  // whole test
+const PROBLEM_MS = 15 * 1000;    // time limit per problem
+const FIXATION_MS = 500;         // fixation cross before each problem
+
+// In order, from easier to harder. Some problems accept more than one answer.
+const problems = [
+  { words: ['cottage', 'swiss', 'cake'], answers: ['cheese'] },
+  { words: ['cream', 'skate', 'water'], answers: ['ice'] },
+  { words: ['loser', 'throat', 'spot'], answers: ['sore'] },
+  { words: ['show', 'life', 'row'], answers: ['boat'] },
+  { words: ['night', 'wrist', 'stop'], answers: ['watch'] },
+  { words: ['duck', 'fold', 'dollar'], answers: ['bill'] },
+  { words: ['rocking', 'wheel', 'high'], answers: ['chair'] },
+  { words: ['dew', 'comb', 'bee'], answers: ['honey'] },
+  { words: ['fountain', 'baking', 'pop'], answers: ['soda'] },
+  { words: ['preserve', 'ranger', 'tropical'], answers: ['forest'] },
+  { words: ['aid', 'rubber', 'wagon'], answers: ['band'] },
+  { words: ['flake', 'mobile', 'cone'], answers: ['snow'] },
+  { words: ['cracker', 'fly', 'fighter'], answers: ['fire'] },
+  { words: ['safety', 'cushion', 'point'], answers: ['pin'] },
+  { words: ['cane', 'daddy', 'plum'], answers: ['sugar'] },
+  { words: ['dream', 'break', 'light'], answers: ['day'] },
+  { words: ['fish', 'mine', 'rush'], answers: ['gold'] },
+  { words: ['political', 'surprise', 'line'], answers: ['party'] },
+  { words: ['measure', 'worm', 'video'], answers: ['tape'] },
+  { words: ['high', 'district', 'house'], answers: ['school', 'court'] },
+  { words: ['sense', 'courtesy', 'place'], answers: ['common'] },
+  { words: ['worm', 'shelf', 'end'], answers: ['book'] },
+  { words: ['piece', 'mind', 'dating'], answers: ['game'] },
+  { words: ['flower', 'friend', 'scout'], answers: ['girl'] },
+  { words: ['river', 'note', 'account'], answers: ['bank'] },
+  { words: ['print', 'berry', 'bird'], answers: ['blue'] },
+  { words: ['pie', 'luck', 'belly'], answers: ['pot'] },
+  { words: ['date', 'alley', 'fold'], answers: ['blind'] },
+  { words: ['opera', 'hand', 'dish'], answers: ['soap'] },
+  { words: ['cadet', 'capsule', 'ship'], answers: ['space'] },
+  { words: ['fur', 'rack', 'tail'], answers: ['coat'] },
+  { words: ['stick', 'maker', 'point'], answers: ['match'] },
+  { words: ['hound', 'pressure', 'shot'], answers: ['blood'] },
+];
+
+// Set by the trial settings on the page around the game ("win" or "lose")
+const condition = new URLSearchParams(location.search).get('condition');
+
+const $ = (id) => document.getElementById(id);
+const show = (id) => { $(id).hidden = false; };
+const hide = (id) => { $(id).hidden = true; };
+
+let testStart, problemStart, clockTimer, fixationTimer, problemTimer;
+let current = -1;        // index of the problem on screen
+let attempts = [];       // wrong and right answers typed for the current problem
+let solvedCount = 0;
+let finished = false;
+const log = [];          // one row per problem shown, printed to the console at the end
+
+$('start-button').addEventListener('click', () => {
+  hide('start');
+  show('trial');
+  testStart = performance.now();
+  clockTimer = setInterval(updateClock, 100);
+  updateClock();
+  nextProblem();
+});
+
+function nextProblem() {
+  current++;
+  if (current >= problems.length) return finish('done');
+  hide('words');
+  hide('answer-form');
+  show('fixation');
+  problemStart = null;
+  fixationTimer = setTimeout(showProblem, FIXATION_MS);
+}
+
+function showProblem() {
+  const problem = problems[current];
+  problem.words.forEach((word, i) => { $('word' + (i + 1)).textContent = word; });
+  hide('fixation');
+  show('words');
+  show('answer-form');
+  $('answer').value = '';
+  $('message').textContent = '';
+  $('answer').focus();
+  attempts = [];
+  problemStart = performance.now();
+  problemTimer = setTimeout(() => endProblem(false), PROBLEM_MS);
+}
+
+$('answer-form').addEventListener('submit', (event) => {
+  event.preventDefault();
+  const answer = $('answer').value.trim().toLowerCase();
+  if (!answer || problemStart === null) return;
+  attempts.push(answer);
+  if (problems[current].answers.includes(answer)) {
+    endProblem(true);
+  } else {
+    $('answer').value = '';
+    $('message').textContent = 'Try again';
+  }
+});
+
+function endProblem(solved) {
+  clearTimeout(problemTimer);
+  record(solved);
+  if (solved) solvedCount++;
+  nextProblem();
+}
+
+function record(solved) {
+  const problem = problems[current];
+  log.push({
+    problem: current + 1,
+    words: problem.words.join(' / '),
+    solved: solved,
+    seconds: solved ? Math.round(performance.now() - problemStart) / 1000 : null,
+    attempts: attempts.join(', '),
+  });
+}
+
+function updateClock() {
+  const now = performance.now();
+  const left = TOTAL_MS - (now - testStart);
+  if (left <= 0) return finish('time');
+  const seconds = Math.ceil(left / 1000);
+  $('time-left').textContent = Math.floor(seconds / 60) + ':' + String(seconds % 60).padStart(2, '0');
+  const problemLeft = problemStart === null ? 1 : Math.max(0, 1 - (now - problemStart) / PROBLEM_MS);
+  $('problem-bar').style.width = problemLeft * 100 + '%';
+}
+
+function finish(reason) {
+  if (finished) return;
+  finished = true;
+  clearInterval(clockTimer);
+  clearTimeout(fixationTimer);
+  clearTimeout(problemTimer);
+  // A problem cut off by the 5-minute limit still counts as shown, unsolved
+  if (reason === 'time' && problemStart !== null) record(false);
+
+  hide('trial');
+  show('end');
+  const solvedText = 'You solved ' + solvedCount + (solvedCount === 1 ? ' problem.' : ' problems.');
+  $('end-title').textContent = reason === 'time' ? "Time's up!" : 'You have done all the problems!';
+  $('end-score').textContent = solvedText;
+  console.table(log);
+
+  // Tell the page around the game how it went, so it can show the outcome
+  if (condition && window.parent !== window) {
+    const won = condition === 'win';
+    const aiCount = won ? Math.max(0, solvedCount - 2) : solvedCount + 2;
+    window.parent.postMessage({
+      type: 'trial-result',
+      won: won,
+      lines: [solvedText, 'The AI solved ' + aiCount + (aiCount === 1 ? ' problem.' : ' problems.')],
+      log: log,
+    }, location.origin);
+  }
+}
+</script>
+</body>
+</html>
