@@ -5,7 +5,7 @@
 //   const problems = [{ lines: ['word', ...], answers: ['solution', ...] }, ...]
 //   a <section id="start" class="screen"> with instructions and a #start-button
 
-const TOTAL_MS = 5 * 60 * 1000;  // whole test
+const TOTAL_MS = 2 * 60 * 1000;  // whole test ## CHANGE HERE FOR THE TEST DURATION
 const PROBLEM_MS = 15 * 1000;    // time limit per problem
 const FIXATION_MS = 500;         // fixation cross before each problem
 
