@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anagrams</title>
+<link rel="stylesheet" href="word-game.css">
+<style>
+  /* Space the scrambled letters out a little so each one is easy to see */
+  #problem {
+    letter-spacing: 0.25em;
+  }
+</style>
+</head>
+<body>
+
+<section id="start" class="screen">
+  <p>In each problem you will see five scrambled letters. Rearrange them into an English word, for example:</p>
+  <p class="example">LPEAP &rarr; APPLE</p>
+  <p>Type your answer and press Enter. You have 15 seconds per problem and 5 minutes in total. Solve as many as you can.</p>
+  <button id="start-button">Start</button>
+</section>
+
+<script>
+// In order, from easier to harder (target % of people solving)
+const problems = [
+  { lines: ['RDWLO'], answers: ['world'] }, // 100% target solving
+  { lines: ['UDWNO'], answers: ['wound'] }, // 100% target solving
+  { lines: ['IDCLH'], answers: ['child'] }, // 100% target solving
+  { lines: ['UTCNO'], answers: ['count'] }, // 100% target solving
+  { lines: ['GTFHI'], answers: ['fight'] }, // 100% target solving
+  { lines: ['IKBCR'], answers: ['brick'] }, // 95% target solving
+  { lines: ['IKTCR'], answers: ['trick'] }, // 95% target solving
+  { lines: ['GTLHI'], answers: ['light'] }, // 95% target solving
+  { lines: ['ATPNL'], answers: ['plant'] }, // 95% target solving
+  { lines: ['IKDNR'], answers: ['drink'] }, // 95% target solving
+  { lines: ['AKBCL'], answers: ['black'] }, // 90% target solving
+  { lines: ['UKTCR'], answers: ['truck'] }, // 90% target solving
+  { lines: ['ONCWL'], answers: ['clown'] }, // 90% target solving
+  { lines: ['UEHSO'], answers: ['house'] }, // 90% target solving
+  { lines: ['OYGRL'], answers: ['glory'] }, // 90% target solving
+  { lines: ['OTFNR'], answers: ['front'] }, // 85% target solving
+  { lines: ['NHLCU'], answers: ['lunch'] }, // 85% target solving
+  { lines: ['OPGUR'], answers: ['group'] }, // 85% target solving
+  { lines: ['UHMTO'], answers: ['mouth'] }, // 85% target solving
+  { lines: ['UHCSR'], answers: ['crush'] }, // 85% target solving
+  { lines: ['THWCA'], answers: ['watch'] }, // 80% target solving
+  { lines: ['NYHEO'], answers: ['honey'] }, // 80% target solving
+  { lines: ['NHMTO'], answers: ['month'] }, // 80% target solving
+  { lines: ['UBTMH'], answers: ['thumb'] }, // 80% target solving
+  { lines: ['ARCIH'], answers: ['chair'] }, // 80% target solving
+  { lines: ['NYFCA'], answers: ['fancy'] }, // 75% target solving
+  { lines: ['THPCI'], answers: ['pitch'] }, // 75% target solving
+  { lines: ['IFTEH'], answers: ['thief'] }, // 75% target solving
+  { lines: ['ODCWR'], answers: ['crowd'] }, // 75% target solving
+  { lines: ['DEJGU'], answers: ['judge'] }, // 75% target solving
+  { lines: ['AEGVR'], answers: ['grave'] }, // 70% target solving
+  { lines: ['UTDBO'], answers: ['doubt'] }, // 70% target solving
+  { lines: ['AHGPR'], answers: ['graph'] }, // 70% target solving
+  { lines: ['ADGRU'], answers: ['guard'] }, // 70% target solving
+  { lines: ['NCPIA'], answers: ['panic'] }, // 70% target solving
+  { lines: ['UTFLA'], answers: ['fault'] }, // 65% target solving
+  { lines: ['YESLT'], answers: ['style'] }, // 65% target solving
+  { lines: ['IFGER'], answers: ['grief'] }, // 65% target solving
+  { lines: ['AEBDL'], answers: ['blade'] }, // 65% target solving
+  { lines: ['BNCIA'], answers: ['cabin'] }, // 65% target solving
+  { lines: ['GCLIO'], answers: ['logic'] }, // 60% target solving
+  { lines: ['AEBZL'], answers: ['blaze'] }, // 60% target solving
+  { lines: ['AEFML'], answers: ['flame'] }, // 60% target solving
+  { lines: ['UTFIR'], answers: ['fruit'] }, // 60% target solving
+  { lines: ['RYMCE'], answers: ['mercy'] }, // 60% target solving
+  { lines: ['RSVUI'], answers: ['virus'] }, // 50% target solving
+  { lines: ['DXIEN'], answers: ['index'] }, // 50% target solving
+  { lines: ['IEKFN'], answers: ['knife'] }, // 50% target solving
+  { lines: ['BMAUL'], answers: ['album'] }, // 50% target solving
+  { lines: ['KEALN'], answers: ['ankle'] }, // 50% target solving
+];
+</script>
+<script src="word-game.js"></script>
+</body>
+</html>

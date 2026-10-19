@@ -1,0 +1,91 @@
+/* Shared look for the timed word games (RAT, anagrams):
+   24-point Times, black on white, problem shown at the center of the screen. */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+html {
+  color-scheme: light;
+}
+body {
+  margin: 0;
+  background: #fff;
+  color: #000;
+  font: 24pt "Times New Roman", Times, serif;
+}
+[hidden] {
+  display: none !important;
+}
+button, input {
+  font: inherit;
+  color: inherit;
+}
+
+.screen {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+}
+.screen p {
+  margin: 0 0 0.75em;
+  max-width: 22em;
+}
+.example {
+  font-style: italic;
+}
+.screen button {
+  margin-top: 0.5em;
+  padding: 0.2em 1em;
+  background: #fff;
+  border: 2px solid #000;
+  cursor: pointer;
+}
+
+/* Total time left, plus a bar that shrinks over the 15 seconds of a problem */
+.clock {
+  position: absolute;
+  top: 16px;
+  left: 0;
+  right: 0;
+}
+.problem-bar {
+  width: min(240px, 60%);
+  height: 4px;
+  margin: 8px auto 0;
+}
+.problem-bar div {
+  height: 100%;
+  background: #000;
+}
+
+/* The fixation cross and the (middle line of the) problem sit exactly at the center */
+.center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  line-height: 1.6;
+}
+
+.answer-form {
+  position: absolute;
+  bottom: 10%;
+  left: 0;
+  right: 0;
+}
+.answer-form input {
+  width: min(320px, 80%);
+  text-align: center;
+  border: none;
+  border-bottom: 2px solid #000;
+  background: none;
+  outline: none;
+}
+.message {
+  min-height: 1.6em;
+  margin: 8px 0 0;
+}
