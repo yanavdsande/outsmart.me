@@ -2,10 +2,13 @@
 // 5 minutes in total, 15 seconds per problem, a fixation cross before each one.
 //
 // The page defines, before loading this file:
-//   const problems = [{ lines: ['word', ...], answers: ['solution', ...] }, ...]
 //   a <section id="start" class="screen"> with instructions and a #start-button
+//   and either a fixed list, shown in order:
+//     const problems = [{ lines: ['word', ...], answers: ['solution', ...] }, ...]
+//   or a function that picks the next problem as the game goes (null to end):
+//     function nextWordProblem(solvedCount) { return { lines, answers } }
 
-const TOTAL_MS = 2 * 60 * 1000;  // whole test ## CHANGE HERE FOR THE TEST DURATION
+const TOTAL_MS = 2 * 60 * 1000;  // whole test
 const PROBLEM_MS = 15 * 1000;    // time limit per problem
 const FIXATION_MS = 500;         // fixation cross before each problem
 
@@ -36,7 +39,8 @@ const hide = (id) => { $(id).hidden = true; };
 const plural = (n) => n + (n === 1 ? ' problem.' : ' problems.');
 
 let testStart, problemStart, clockTimer, fixationTimer, problemTimer;
-let current = -1;        // index of the problem on screen
+let current = null;      // the problem on screen
+let shownCount = 0;      // problems shown so far
 let attempts = [];       // wrong and right answers typed for the current problem
 let solvedCount = 0;
 let finished = false;
@@ -51,9 +55,15 @@ $('start-button').addEventListener('click', () => {
   nextProblem();
 });
 
+function takeProblem() {
+  if (typeof nextWordProblem === 'function') return nextWordProblem(solvedCount);
+  return problems[shownCount] || null;
+}
+
 function nextProblem() {
-  current++;
-  if (current >= problems.length) return finish('done');
+  current = takeProblem();
+  if (!current) return finish('done');
+  shownCount++;
   hide('problem');
   hide('answer-form');
   show('fixation');
@@ -62,7 +72,7 @@ function nextProblem() {
 }
 
 function showProblem() {
-  $('problem').replaceChildren(...problems[current].lines.map((text) => {
+  $('problem').replaceChildren(...current.lines.map((text) => {
     const line = document.createElement('div');
     line.textContent = text;
     return line;
@@ -83,7 +93,7 @@ $('answer-form').addEventListener('submit', (event) => {
   const answer = $('answer').value.trim().toLowerCase();
   if (!answer || problemStart === null) return;
   attempts.push(answer);
-  if (problems[current].answers.includes(answer)) {
+  if (current.answers.includes(answer)) {
     endProblem(true);
   } else {
     $('answer').value = '';
@@ -100,8 +110,9 @@ function endProblem(solved) {
 
 function record(solved) {
   log.push({
-    problem: current + 1,
-    shown: problems[current].lines.join(' / '),
+    problem: shownCount,
+    shown: current.lines.join(' / '),
+    solution: current.answers.join(' / '),
     solved: solved,
     seconds: solved ? Math.round(performance.now() - problemStart) / 1000 : null,
     attempts: attempts.join(', '),
