@@ -15,15 +15,36 @@ function loadGame() {
 settings.addEventListener('change', loadGame);
 loadGame();
 
+// How tall the game's content is. The timed games show one .screen at a time,
+// stretched to fill the frame, so for those add up what is in the screen showing;
+// that way the frame can shrink again (e.g. from long instructions to the game).
+function contentHeight(doc) {
+  const view = doc.defaultView;
+  const screen = [...doc.querySelectorAll('.screen')].find((s) => !s.hidden);
+  if (!screen) return doc.documentElement.getBoundingClientRect().height;
+  const style = view.getComputedStyle(screen);
+  let height = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
+  for (const child of screen.children) {
+    const childStyle = view.getComputedStyle(child);
+    if (childStyle.position === 'absolute' || childStyle.display === 'none') continue;
+    height += child.getBoundingClientRect().height
+      + parseFloat(childStyle.marginTop) + parseFloat(childStyle.marginBottom);
+  }
+  return height;
+}
+
 // Keep the frame at least square, and taller when the game needs it,
 // so it never needs a scrollbar
 frame.addEventListener('load', () => {
   const fit = () => {
     frame.style.aspectRatio = 'auto';
-    const content = frame.contentDocument.documentElement.getBoundingClientRect().height;
-    frame.style.height = Math.max(frame.clientWidth, content) + 'px';
+    frame.style.height = Math.max(frame.clientWidth, contentHeight(frame.contentDocument)) + 'px';
   };
   new ResizeObserver(fit).observe(frame.contentDocument.body);
+  // Also re-measure when the game switches screens (e.g. instructions -> game),
+  // which doesn't always change the game's size by itself
+  new MutationObserver(fit).observe(frame.contentDocument.body,
+    { subtree: true, attributes: true, attributeFilter: ['hidden'] });
   fit();
 });
 

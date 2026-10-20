@@ -89,3 +89,46 @@ button, input {
   min-height: 1.6em;
   margin: 8px 0 0;
 }
+
+/* Multiple choice (Eyes test): photo with two words above and two below */
+.problem-image {
+  display: block;
+  width: min(560px, 90vw);
+  margin: 0.25em auto;
+}
+.choice-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+.screen .choice {
+  margin: 0;
+  padding: 0.1em 0.4em;
+  border: 2px solid transparent;
+  background: none;
+  font-size: min(24pt, 4.5vw);
+  cursor: pointer;
+}
+.screen .choice:hover,
+.screen .choice:focus-visible {
+  border-color: #000;
+}
+.screen .choice.wrong {
+  color: inherit;
+  text-decoration: line-through;
+  cursor: default;
+}
+.screen .choice.correct {
+  border-color: #000;
+}
+/* "Correct!" / "Incorrect, try again", below the photo's bottom words */
+.screen .choice-message {
+  position: absolute;
+  bottom: 12px;
+  left: 0;
+  right: 0;
+  max-width: none;
+  min-height: 1.6em;
+  margin: 0;
+  font-size: min(24pt, 5vw);
+}

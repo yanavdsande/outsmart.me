@@ -17,22 +17,23 @@
 <section id="start" class="screen">
   <p>In each problem you will see scrambled letters. Rearrange them into an English word, for example:</p>
   <p class="example">TAHRE &rarr; HEART</p>
-  <p>The words start with five letters. Every 10 words you solve, they get one letter longer.</p>
+  <p>The words start with five letters. Every 5 words you solve, they get one letter longer.</p>
   <p>Type your answer and press Enter. You have 15 seconds per problem and 2 minutes in total. Solve as many as you can.</p>
   <button id="start-button">Start</button>
 </section>
 
 <script src="anagram.js"></script>
 <script>
-// Every 10 words solved, the words get one letter longer: 5 letters until
-// 10 are solved, then 6, then 7, up to 10 letters.
+// Every 5 words solved, the words get one letter longer: 5 letters until
+// 5 are solved, then 6, then 7, up to 10 letters.
+const WORDS_PER_STEP = 5;
 const WORDS_BY_LENGTH = { 5: WORDS_5, ...LONGER_WORDS };
 const LONGEST = Math.max(...Object.keys(WORDS_BY_LENGTH).map(Number));
 const usedCount = {};  // how many words of each length have been shown
 
 function nextWordProblem(solvedCount) {
-  // If a length runs out of words before 10 are solved, move on to the next length
-  for (let length = Math.min(5 + Math.floor(solvedCount / 10), LONGEST); length <= LONGEST; length++) {
+  // If a length runs out of words before enough are solved, move on to the next length
+  for (let length = Math.min(5 + Math.floor(solvedCount / WORDS_PER_STEP), LONGEST); length <= LONGEST; length++) {
     const words = WORDS_BY_LENGTH[length];
     usedCount[length] = usedCount[length] || 0;
     if (usedCount[length] < words.length) return anagramProblem(words[usedCount[length]++]);

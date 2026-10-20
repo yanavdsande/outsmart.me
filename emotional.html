@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Emotional</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <nav>
+    <ul>
+      <li>
+        <a href="index.html" class="home" aria-label="Home">
+          <!-- Pixel-art house, drawn on an 11x11 grid -->
+          <svg viewBox="0 0 11 11" width="22" height="22" shape-rendering="crispEdges" aria-hidden="true">
+            <path fill="currentColor" d="M5 0h1v1h1v1h1v1h1v1h1v1h1v1H0V5h1V4h1V3h1V2h1V1h1z M2 6h7v5H7V8H4v3H2z"/>
+          </svg>
+        </a>
+      </li>
+      <li><a href="visual.html">Visual</a></li>
+      <li><a href="logical.html">Logical</a></li>
+      <li><a href="creative.html">Creative</a></li>
+      <li><a href="language.html">Language</a></li>
+      <li><a href="emotional.html" aria-current="page">Emotional</a></li>
+    </ul>
+  </nav>
+  <main>
+    <div class="game-area">
+      <!-- Trial settings: changing one restarts the game with the new setting -->
+      <form class="trial-settings" autocomplete="off">
+        <label>
+          Game
+          <select name="game">
+            <option value="eyes">Eyes test</option>
+          </select>
+        </label>
+        <label>
+          Condition
+          <select name="condition">
+            <option value="win">Win</option>
+            <option value="lose">Lose</option>
+          </select>
+        </label>
+      </form>
+      <!-- The game runs in its own frame, so its styles don't mix with the site's -->
+      <iframe class="game-frame" title="Game"></iframe>
+    </div>
+  </main>
+  <script src="games.js"></script>
+</body>
+</html>

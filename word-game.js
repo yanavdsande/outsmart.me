@@ -1,5 +1,5 @@
-// Shared engine for the timed word games (RAT, anagrams).
-// 5 minutes in total, 15 seconds per problem, a fixation cross before each one.
+// Shared engine for the timed games (RAT, anagrams, Eyes test).
+// 2 minutes in total, 15 seconds per problem, a fixation cross before each one.
 //
 // The page defines, before loading this file:
 //   a <section id="start" class="screen"> with instructions and a #start-button
@@ -7,10 +7,17 @@
 //     const problems = [{ lines: ['word', ...], answers: ['solution', ...] }, ...]
 //   or a function that picks the next problem as the game goes (null to end):
 //     function nextWordProblem(solvedCount) { return { lines, answers } }
+//
+// A problem is typed in, unless it has an image and four choices: then it is
+// multiple choice, answered by clicking (a wrong word can be tried again):
+//     { image: 'photo.jpg', choices: ['a', 'b', 'c', 'd'], answers: ['b'] }
+// Optionally the page words the score itself:
+//     function scoreText(who, count) { return who + ' got ' + count + ' right.' }
 
 const TOTAL_MS = 2 * 60 * 1000;  // whole test
 const PROBLEM_MS = 15 * 1000;    // time limit per problem
 const FIXATION_MS = 500;         // fixation cross before each problem
+const CORRECT_MS = 700;          // how long "Correct!" shows before the next problem
 
 // Set by the trial settings on the page around the game ("win" or "lose")
 const condition = new URLSearchParams(location.search).get('condition');
@@ -18,11 +25,12 @@ const condition = new URLSearchParams(location.search).get('condition');
 document.body.insertAdjacentHTML('beforeend', `
   <section id="trial" class="screen" hidden>
     <div class="clock">
-      <div id="time-left">5:00</div>
+      <div id="time-left">${TOTAL_MS / 60000}:00</div>
       <div class="problem-bar"><div id="problem-bar"></div></div>
     </div>
     <div id="fixation" class="center">+</div>
     <div id="problem" class="center" hidden></div>
+    <p id="choice-message" class="choice-message" hidden></p>
     <form id="answer-form" class="answer-form" autocomplete="off" hidden>
       <input id="answer" aria-label="Your answer" autocapitalize="off" spellcheck="false">
       <p id="message" class="message"></p>
@@ -37,8 +45,12 @@ const $ = (id) => document.getElementById(id);
 const show = (id) => { $(id).hidden = false; };
 const hide = (id) => { $(id).hidden = true; };
 const plural = (n) => n + (n === 1 ? ' problem.' : ' problems.');
+const describeScore = typeof scoreText === 'function'
+  ? scoreText
+  : (who, count) => who + ' solved ' + plural(count);
 
-let testStart, problemStart, clockTimer, fixationTimer, problemTimer;
+let testStart, problemStart, answeredAt, clockTimer, fixationTimer, problemTimer, correctTimer;
+let showingCorrect = false;  // "Correct!" is on screen, the next problem follows shortly
 let current = null;      // the problem on screen
 let shownCount = 0;      // problems shown so far
 let attempts = [];       // wrong and right answers typed for the current problem
@@ -49,6 +61,10 @@ const log = [];          // one row per problem shown, printed to the console at
 $('start-button').addEventListener('click', () => {
   hide('start');
   show('trial');
+  // Load all photos now, so none appears late when its 15 seconds start
+  if (typeof problems !== 'undefined') {
+    problems.forEach((problem) => { if (problem.image) new Image().src = problem.image; });
+  }
   testStart = performance.now();
   clockTimer = setInterval(updateClock, 100);
   updateClock();
@@ -66,24 +82,32 @@ function nextProblem() {
   shownCount++;
   hide('problem');
   hide('answer-form');
+  hide('choice-message');
   show('fixation');
   problemStart = null;
   fixationTimer = setTimeout(showProblem, FIXATION_MS);
 }
 
 function showProblem() {
-  $('problem').replaceChildren(...current.lines.map((text) => {
-    const line = document.createElement('div');
-    line.textContent = text;
-    return line;
-  }));
   hide('fixation');
+  if (current.choices) {
+    showChoices(current);
+    $('choice-message').textContent = '';
+    show('choice-message');
+  } else {
+    $('problem').replaceChildren(...current.lines.map((text) => {
+      const line = document.createElement('div');
+      line.textContent = text;
+      return line;
+    }));
+    show('answer-form');
+    $('answer').value = '';
+    $('message').textContent = '';
+    $('answer').focus();
+  }
   show('problem');
-  show('answer-form');
-  $('answer').value = '';
-  $('message').textContent = '';
-  $('answer').focus();
   attempts = [];
+  answeredAt = null;
   problemStart = performance.now();
   problemTimer = setTimeout(() => endProblem(false), PROBLEM_MS);
 }
@@ -101,6 +125,52 @@ $('answer-form').addEventListener('submit', (event) => {
   }
 });
 
+// Multiple choice: the photo with its four words, two above and two below it,
+// as on the paper version
+function showChoices(problem) {
+  const row = (words) => {
+    const div = document.createElement('div');
+    div.className = 'choice-row';
+    div.append(...words.map((word) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'choice';
+      button.dataset.choice = word;
+      button.textContent = word;
+      return button;
+    }));
+    return div;
+  };
+  const image = document.createElement('img');
+  image.className = 'problem-image';
+  image.src = problem.image;
+  image.alt = '';
+  $('problem').replaceChildren(row(problem.choices.slice(0, 2)), image, row(problem.choices.slice(2)));
+}
+
+// A right word shows "Correct!" and moves on; a wrong word is crossed out
+// and another one can be tried, until the 15 seconds are up
+$('problem').addEventListener('click', (event) => {
+  const choice = event.target.closest('[data-choice]');
+  if (!choice || choice.disabled || problemStart === null || showingCorrect) return;
+  attempts.push(choice.dataset.choice);
+  if (current.answers.includes(choice.dataset.choice)) {
+    answeredAt = performance.now();
+    clearTimeout(problemTimer);
+    showingCorrect = true;
+    choice.classList.add('correct');
+    $('choice-message').textContent = 'Correct!';
+    correctTimer = setTimeout(() => {
+      showingCorrect = false;
+      endProblem(true);
+    }, CORRECT_MS);
+  } else {
+    choice.disabled = true;
+    choice.classList.add('wrong');
+    $('choice-message').textContent = 'Incorrect, try again';
+  }
+});
+
 function endProblem(solved) {
   clearTimeout(problemTimer);
   record(solved);
@@ -111,10 +181,11 @@ function endProblem(solved) {
 function record(solved) {
   log.push({
     problem: shownCount,
-    shown: current.lines.join(' / '),
+    shown: current.image || current.lines.join(' / '),
     solution: current.answers.join(' / '),
     solved: solved,
-    seconds: solved ? Math.round(performance.now() - problemStart) / 1000 : null,
+    seconds: solved ? Math.round((answeredAt ?? performance.now()) - problemStart) / 1000 : null,
+    firstTry: solved && attempts.length === 1,
     attempts: attempts.join(', '),
   });
 }
@@ -135,12 +206,19 @@ function finish(reason) {
   clearInterval(clockTimer);
   clearTimeout(fixationTimer);
   clearTimeout(problemTimer);
-  // A problem cut off by the 5-minute limit still counts as shown, unsolved
-  if (reason === 'time' && problemStart !== null) record(false);
+  clearTimeout(correctTimer);
+  if (showingCorrect) {
+    // Answered right just before the time ran out: still counts
+    record(true);
+    solvedCount++;
+  } else if (reason === 'time' && problemStart !== null) {
+    // A problem cut off by the total time limit still counts as shown, unsolved
+    record(false);
+  }
 
   hide('trial');
   show('end');
-  const solvedText = 'You solved ' + plural(solvedCount);
+  const solvedText = describeScore('You', solvedCount);
   $('end-title').textContent = reason === 'time' ? "Time's up!" : 'You have done all the problems!';
   $('end-score').textContent = solvedText;
   console.table(log);
@@ -153,7 +231,7 @@ function finish(reason) {
     window.parent.postMessage({
       type: 'trial-result',
       won: won,
-      lines: [solvedText, 'The AI solved ' + plural(aiCount)],
+      lines: [solvedText, describeScore('The AI', aiCount)],
       log: log,
     }, location.origin);
   }

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eyes test</title>
+<!-- Reading the Mind in the Eyes Test, revised adult version (Baron-Cohen et al., 2001).
+     Photos, words and answers from the Autism Research Centre, University of Cambridge. -->
+<link rel="stylesheet" href="word-game.css">
+<style>
+  .practice img {
+    width: min(360px, 70vw);
+    display: block;
+    margin: 0 auto;
+  }
+  .credit {
+    font-size: 12pt;
+  }
+</style>
+</head>
+<body>
+
+<section id="start" class="screen">
+  <p>For each set of eyes, choose the word that best describes what the person in the picture is thinking or feeling. More than one word may seem to fit, but choose just one. Read all four words before you choose.</p>
+  <div class="practice">
+    <img src="images/eyes/eyes-00.jpg" alt="Practice photo">
+    <p>jealous &middot; panicked &middot; arrogant &middot; hateful</p>
+    <p class="example">For these eyes the answer is: panicked</p>
+  </div>
+  <p>Click a word to answer. If it is wrong, you can try another one. You have 15 seconds per photo and 2 minutes in total. Get as many right as you can.</p>
+  <button id="start-button">Start</button>
+  <p class="credit">Reading the Mind in the Eyes Test (Baron-Cohen et al., 2001), Autism Research Centre, University of Cambridge</p>
+</section>
+
+<script>
+// The 36 test items in their standard order. Words in the order of the paper
+// version (top left, top right, bottom left, bottom right); answers from the
+// Autism Research Centre's answer sheet.
+const problems = [
+  { image: 'images/eyes/eyes-01.jpg', choices: ["playful", "comforting", "irritated", "bored"], answers: ['playful'] },
+  { image: 'images/eyes/eyes-02.jpg', choices: ["terrified", "upset", "arrogant", "annoyed"], answers: ['upset'] },
+  { image: 'images/eyes/eyes-03.jpg', choices: ["joking", "flustered", "desire", "convinced"], answers: ['desire'] },
+  { image: 'images/eyes/eyes-04.jpg', choices: ["joking", "insisting", "amused", "relaxed"], answers: ['insisting'] },
+  { image: 'images/eyes/eyes-05.jpg', choices: ["irritated", "sarcastic", "worried", "friendly"], answers: ['worried'] },
+  { image: 'images/eyes/eyes-06.jpg', choices: ["aghast", "fantasizing", "impatient", "alarmed"], answers: ['fantasizing'] },
+  { image: 'images/eyes/eyes-07.jpg', choices: ["apologetic", "friendly", "uneasy", "dispirited"], answers: ['uneasy'] },
+  { image: 'images/eyes/eyes-08.jpg', choices: ["despondent", "relieved", "shy", "excited"], answers: ['despondent'] },
+  { image: 'images/eyes/eyes-09.jpg', choices: ["annoyed", "hostile", "horrified", "preoccupied"], answers: ['preoccupied'] },
+  { image: 'images/eyes/eyes-10.jpg', choices: ["cautious", "insisting", "bored", "aghast"], answers: ['cautious'] },
+  { image: 'images/eyes/eyes-11.jpg', choices: ["terrified", "amused", "regretful", "flirtatious"], answers: ['regretful'] },
+  { image: 'images/eyes/eyes-12.jpg', choices: ["indifferent", "embarrassed", "sceptical", "dispirited"], answers: ['sceptical'] },
+  { image: 'images/eyes/eyes-13.jpg', choices: ["decisive", "anticipating", "threatening", "shy"], answers: ['anticipating'] },
+  { image: 'images/eyes/eyes-14.jpg', choices: ["irritated", "disappointed", "depressed", "accusing"], answers: ['accusing'] },
+  { image: 'images/eyes/eyes-15.jpg', choices: ["contemplative", "flustered", "encouraging", "amused"], answers: ['contemplative'] },
+  { image: 'images/eyes/eyes-16.jpg', choices: ["irritated", "thoughtful", "encouraging", "sympathetic"], answers: ['thoughtful'] },
+  { image: 'images/eyes/eyes-17.jpg', choices: ["doubtful", "affectionate", "playful", "aghast"], answers: ['doubtful'] },
+  { image: 'images/eyes/eyes-18.jpg', choices: ["decisive", "amused", "aghast", "bored"], answers: ['decisive'] },
+  { image: 'images/eyes/eyes-19.jpg', choices: ["arrogant", "grateful", "sarcastic", "tentative"], answers: ['tentative'] },
+  { image: 'images/eyes/eyes-20.jpg', choices: ["dominant", "friendly", "guilty", "horrified"], answers: ['friendly'] },
+  { image: 'images/eyes/eyes-21.jpg', choices: ["embarrassed", "fantasizing", "confused", "panicked"], answers: ['fantasizing'] },
+  { image: 'images/eyes/eyes-22.jpg', choices: ["preoccupied", "grateful", "insisting", "imploring"], answers: ['preoccupied'] },
+  { image: 'images/eyes/eyes-23.jpg', choices: ["contented", "apologetic", "defiant", "curious"], answers: ['defiant'] },
+  { image: 'images/eyes/eyes-24.jpg', choices: ["pensive", "irritated", "excited", "hostile"], answers: ['pensive'] },
+  { image: 'images/eyes/eyes-25.jpg', choices: ["panicked", "incredulous", "despondent", "interested"], answers: ['interested'] },
+  { image: 'images/eyes/eyes-26.jpg', choices: ["alarmed", "shy", "hostile", "anxious"], answers: ['hostile'] },
+  { image: 'images/eyes/eyes-27.jpg', choices: ["joking", "cautious", "arrogant", "reassuring"], answers: ['cautious'] },
+  { image: 'images/eyes/eyes-28.jpg', choices: ["interested", "joking", "affectionate", "contented"], answers: ['interested'] },
+  { image: 'images/eyes/eyes-29.jpg', choices: ["impatient", "aghast", "irritated", "reflective"], answers: ['reflective'] },
+  { image: 'images/eyes/eyes-30.jpg', choices: ["grateful", "flirtatious", "hostile", "disappointed"], answers: ['flirtatious'] },
+  { image: 'images/eyes/eyes-31.jpg', choices: ["ashamed", "confident", "joking", "dispirited"], answers: ['confident'] },
+  { image: 'images/eyes/eyes-32.jpg', choices: ["serious", "ashamed", "bewildered", "alarmed"], answers: ['serious'] },
+  { image: 'images/eyes/eyes-33.jpg', choices: ["embarrassed", "guilty", "fantasizing", "concerned"], answers: ['concerned'] },
+  { image: 'images/eyes/eyes-34.jpg', choices: ["aghast", "baffled", "distrustful", "terrified"], answers: ['distrustful'] },
+  { image: 'images/eyes/eyes-35.jpg', choices: ["puzzled", "nervous", "insisting", "contemplative"], answers: ['nervous'] },
+  { image: 'images/eyes/eyes-36.jpg', choices: ["ashamed", "nervous", "suspicious", "indecisive"], answers: ['suspicious'] },
+];
+
+function scoreText(who, count) {
+  return who + ' got ' + count + ' right.';
+}
+</script>
+<script src="word-game.js"></script>
+</body>
+</html>
